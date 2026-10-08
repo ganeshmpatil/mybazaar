@@ -1,0 +1,36 @@
+# Web framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+
+# Database
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.9
+alembic==1.13.2
+geoalchemy2==0.15.2
+
+# Redis
+redis==5.1.1
+
+# Auth
+pyjwt==2.9.0
+passlib[bcrypt]==1.7.4
+
+# Validation & serialization
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+# Image handling
+pillow==10.4.0
+boto3==1.35.19
+
+# PDF invoice
+reportlab==4.2.2
+
+# HTTP client (for SMS gateway)
+httpx==0.27.2
+
+# Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+httpx==0.27.2
