@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyBazaar Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --primary: #2d6a4f; --primary-light: #40916c; }
+        body { background: #f5f6fa; }
+        .sidebar { background: var(--primary); min-height: 100vh; color: white; }
+        .sidebar .nav-link { color: rgba(255,255,255,0.75); padding: 12px 20px; border-radius: 8px; margin: 2px 8px; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: var(--primary-light); color: white; }
+        .sidebar .nav-link i { width: 24px; }
+        .stat-card { border: none; border-radius: 12px; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card .icon-box { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+        .product-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+        .badge-stock { font-size: 0.75rem; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .table th { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; color: #6c757d; }
+        .brand-title { font-size: 1.3rem; font-weight: 700; padding: 20px; }
+        .brand-title i { color: #95d5b2; }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 sidebar p-0">
+            <div class="brand-title"><i class="bi bi-shop"></i> MyBazaar</div>
+            <nav class="nav flex-column">
+                <a class="nav-link active" href="#" data-section="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a class="nav-link" href="#" data-section="products"><i class="bi bi-box-seam"></i> Products</a>
+                <a class="nav-link" href="#" data-section="orders"><i class="bi bi-receipt"></i> Orders</a>
+                <a class="nav-link" href="#" data-section="stock"><i class="bi bi-boxes"></i> Stock</a>
+                <a class="nav-link" href="#" data-section="images"><i class="bi bi-image"></i> Product Images</a>
+                <a class="nav-link" href="/tracking" target="_blank"><i class="bi bi-geo-alt"></i> Live Tracking</a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 p-4">
+            <!-- Login Section -->
+            <div id="login-section">
+                <div class="row justify-content-center mt-5">
+                    <div class="col-md-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body p-4">
+                                <h4 class="text-center mb-4"><i class="bi bi-shield-lock" style="color:var(--primary)"></i> Admin Login</h4>
+                                <div class="mb-3">
+                                    <label class="form-label">Mobile Number</label>
+                                    <input type="text" id="login-mobile" class="form-control" value="9876543210">
+                                </div>
+                                <button class="btn w-100 text-white" style="background:var(--primary)" onclick="sendAdminOtp()">Send OTP</button>
+                                <div id="otp-section" class="mt-3" style="display:none">
+                                    <label class="form-label">OTP</label>
+                                    <input type="text" id="login-otp" class="form-control" maxlength="4">
+                                    <button class="btn w-100 text-white mt-2" style="background:var(--primary)" onclick="verifyAdminOtp()">Verify & Login</button>
+                                </div>
+                                <div id="login-msg" class="mt-2 text-center"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Panel (hidden until login) -->
+            <div id="admin-panel" style="display:none">
+                <!-- Dashboard -->
+                <div id="section-dashboard" class="section active">
+                    <h4 class="mb-4">Dashboard</h4>
+                    <div class="row g-3" id="dashboard-stats"></div>
+                </div>
+
+                <!-- Products -->
+                <div id="section-products" class="section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0">Products</h4>
+                        <button class="btn text-white" style="background:var(--primary)" data-bs-toggle="modal" data-bs-target="#productModal" onclick="resetProductForm()">
+                            <i class="bi bi-plus-lg"></i> Add Product
+                        </button>
+                    </div>
+                    <div class="card shadow-sm">
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr><th>Image</th><th>Name</th><th>MRP</th><th>Selling Price</th><th>Unit</th><th>Stock</th><th>Status</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="products-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders -->
+                <div id="section-orders" class="section">
+                    <h4 class="mb-4">Orders</h4>
+                    <div class="card shadow-sm">
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr><th>Order #</th><th>Status</th><th>Total</th><th>Payment</th><th>Date</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="orders-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stock -->
+                <div id="section-stock" class="section">
+                    <h4 class="mb-4">Stock Management</h4>
+                    <div class="card shadow-sm">
+                        <div class="card-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr><th>Product</th><th>Current Stock</th><th>Low Threshold</th><th>Status</th><th>Update</th></tr>
+                                </thead>
+                                <tbody id="stock-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Images -->
+                <div id="section-images" class="section">
+                    <h4 class="mb-4">Product Images</h4>
+                    <p class="text-muted">Upload images to replace current product photos. Images are saved as <code>&lt;product_name&gt;.jpg</code></p>
+                    <div class="row g-3" id="images-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalTitle">Add Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-product-id">
+                <div class="mb-2"><label class="form-label">Name</label><input type="text" id="p-name" class="form-control"></div>
+                <div class="mb-2"><label class="form-label">Description</label><textarea id="p-desc" class="form-control" rows="2"></textarea></div>
+                <div class="row">
+                    <div class="col-4 mb-2"><label class="form-label">MRP</label><input type="number" id="p-mrp" class="form-control" step="0.01"></div>
+                    <div class="col-4 mb-2"><label class="form-label">Selling Price</label><input type="number" id="p-sp" class="form-control" step="0.01"></div>
+                    <div class="col-4 mb-2"><label class="form-label">Cost Price</label><input type="number" id="p-cp" class="form-control" step="0.01"></div>
+                </div>
+                <div class="row">
+                    <div class="col-4 mb-2"><label class="form-label">Unit</label><input type="text" id="p-unit" class="form-control" placeholder="1 kg"></div>
+                    <div class="col-4 mb-2"><label class="form-label">GST %</label><input type="number" id="p-gst" class="form-control" step="0.01" value="5"></div>
+                    <div class="col-4 mb-2"><label class="form-label">Initial Stock</label><input type="number" id="p-stock" class="form-control" value="100"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn text-white" style="background:var(--primary)" onclick="saveProduct()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="order-detail-body"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const API = 'http://localhost:8000/api/v1';
+let TOKEN = null;
+
+// --- Auth ---
+async function sendAdminOtp() {
+    const mobile = document.getElementById('login-mobile').value;
+    const res = await fetch(`${API}/auth/send-otp`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({mobile})
+    });
+    if (res.ok) {
+        document.getElementById('otp-section').style.display = 'block';
+        document.getElementById('login-msg').innerHTML = '<span class="text-success">OTP sent! Check server logs.</span>';
+    }
+}
+
+async function verifyAdminOtp() {
+    const mobile = document.getElementById('login-mobile').value;
+    const otp = document.getElementById('login-otp').value;
+    const res = await fetch(`${API}/auth/verify-otp`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({mobile, otp})
+    });
+    if (res.ok) {
+        const data = await res.json();
+        TOKEN = data.access_token;
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'block';
+        loadDashboard();
+    } else {
+        document.getElementById('login-msg').innerHTML = '<span class="text-danger">Invalid OTP</span>';
+    }
+}
+
+function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` };
+}
+
+// --- Navigation ---
+document.querySelectorAll('[data-section]').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(`section-${link.dataset.section}`).classList.add('active');
+
+        if (link.dataset.section === 'dashboard') loadDashboard();
+        if (link.dataset.section === 'products') loadProducts();
+        if (link.dataset.section === 'orders') loadOrders();
+        if (link.dataset.section === 'stock') loadStock();
+        if (link.dataset.section === 'images') loadImages();
+    });
+});
+
+// --- Dashboard ---
+async function loadDashboard() {
+    const res = await fetch(`${API}/admin/reports/dashboard`, { headers: authHeaders() });
+    const d = await res.json();
+    document.getElementById('dashboard-stats').innerHTML = `
+        <div class="col-md-3"><div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center"><div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-cart-check"></i></div>
+            <div><div class="text-muted small">Today's Orders</div><div class="fs-4 fw-bold">${d.today.orders}</div></div></div></div></div>
+        <div class="col-md-3"><div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center"><div class="icon-box bg-success bg-opacity-10 text-success me-3"><i class="bi bi-currency-rupee"></i></div>
+            <div><div class="text-muted small">Today's Revenue</div><div class="fs-4 fw-bold">&#8377;${parseFloat(d.today.revenue).toFixed(0)}</div></div></div></div></div>
+        <div class="col-md-3"><div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center"><div class="icon-box bg-warning bg-opacity-10 text-warning me-3"><i class="bi bi-hourglass-split"></i></div>
+            <div><div class="text-muted small">Pending Orders</div><div class="fs-4 fw-bold">${d.pending_orders}</div></div></div></div></div>
+        <div class="col-md-3"><div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center"><div class="icon-box bg-danger bg-opacity-10 text-danger me-3"><i class="bi bi-exclamation-triangle"></i></div>
+            <div><div class="text-muted small">Low Stock Items</div><div class="fs-4 fw-bold">${d.low_stock_items}</div></div></div></div></div>
+        <div class="col-md-3"><div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center"><div class="icon-box bg-info bg-opacity-10 text-info me-3"><i class="bi bi-truck"></i></div>
+            <div><div class="text-muted small">Out for Delivery</div><div class="fs-4 fw-bold">${d.out_for_delivery}</div></div></div></div></div>
+        <div class="col-md-3"><div class="card stat-card shadow-sm p-3">
+            <div class="d-flex align-items-center"><div class="icon-box bg-secondary bg-opacity-10 text-secondary me-3"><i class="bi bi-cash-stack"></i></div>
+            <div><div class="text-muted small">COD Pending</div><div class="fs-4 fw-bold">&#8377;${parseFloat(d.cod_pending_collection).toFixed(0)}</div></div></div></div></div>
+    `;
+}
+
+// --- Products ---
+async function loadProducts() {
+    const res = await fetch(`${API}/products?page_size=100`);
+    const d = await res.json();
+    const rows = d.items.map(p => `
+        <tr>
+            <td><img src="${p.primary_image || ''}" class="product-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22><rect fill=%22%23ddd%22 width=%2250%22 height=%2250%22/></svg>'"></td>
+            <td><strong>${p.name}</strong></td>
+            <td>&#8377;${p.mrp}</td>
+            <td>&#8377;${p.selling_price}</td>
+            <td>${p.unit || '-'}</td>
+            <td>${p.stock_quantity || 0}</td>
+            <td>${p.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="editProduct(${p.id})"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})"><i class="bi bi-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+    document.getElementById('products-table').innerHTML = rows || '<tr><td colspan="8" class="text-center text-muted p-4">No products</td></tr>';
+}
+
+function resetProductForm() {
+    document.getElementById('productModalTitle').textContent = 'Add Product';
+    document.getElementById('edit-product-id').value = '';
+    ['p-name','p-desc','p-mrp','p-sp','p-cp','p-unit'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p-gst').value = '5';
+    document.getElementById('p-stock').value = '100';
+}
+
+async function editProduct(id) {
+    const res = await fetch(`${API}/products/${id}`);
+    const p = await res.json();
+    document.getElementById('productModalTitle').textContent = 'Edit Product';
+    document.getElementById('edit-product-id').value = id;
+    document.getElementById('p-name').value = p.name;
+    document.getElementById('p-desc').value = p.description || '';
+    document.getElementById('p-mrp').value = p.mrp;
+    document.getElementById('p-sp').value = p.selling_price;
+    document.getElementById('p-cp').value = '';
+    document.getElementById('p-unit').value = p.unit || '';
+    document.getElementById('p-gst').value = p.gst_percent;
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+
+async function saveProduct() {
+    const id = document.getElementById('edit-product-id').value;
+    const body = {
+        name: document.getElementById('p-name').value,
+        description: document.getElementById('p-desc').value || null,
+        mrp: parseFloat(document.getElementById('p-mrp').value),
+        selling_price: parseFloat(document.getElementById('p-sp').value),
+        unit: document.getElementById('p-unit').value || null,
+        gst_percent: parseFloat(document.getElementById('p-gst').value),
+    };
+
+    let res;
+    if (id) {
+        res = await fetch(`${API}/admin/products/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(body) });
+    } else {
+        body.cost_price = parseFloat(document.getElementById('p-cp').value);
+        body.initial_stock = parseFloat(document.getElementById('p-stock').value);
+        body.category_id = 3;
+        res = await fetch(`${API}/admin/products`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+    }
+
+    if (res.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+        loadProducts();
+    } else {
+        const err = await res.json();
+        alert(err.detail || 'Error saving product');
+    }
+}
+
+async function deleteProduct(id) {
+    if (!confirm('Deactivate this product?')) return;
+    await fetch(`${API}/admin/products/${id}`, { method: 'DELETE', headers: authHeaders() });
+    loadProducts();
+}
+
+// --- Orders ---
+async function loadOrders() {
+    const res = await fetch(`${API}/admin/orders`, { headers: authHeaders() });
+    const d = await res.json();
+    const statusColors = { PLACED: 'primary', CONFIRMED: 'info', PACKED: 'warning', OUT_FOR_DELIVERY: 'info', DELIVERED: 'success', CANCELLED: 'danger', RETURNED: 'secondary' };
+    const rows = d.items.map(o => `
+        <tr>
+            <td><strong>${o.order_number}</strong></td>
+            <td><span class="badge bg-${statusColors[o.status] || 'secondary'}">${o.status}</span></td>
+            <td>&#8377;${parseFloat(o.total).toFixed(2)}</td>
+            <td>${o.payment_mode}</td>
+            <td>${new Date(o.created_at).toLocaleString('en-IN')}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(${o.id})"><i class="bi bi-eye"></i></button>
+                ${o.status === 'PLACED' ? `<button class="btn btn-sm btn-outline-success" onclick="updateOrderStatus(${o.id},'CONFIRMED')">Confirm</button>` : ''}
+                ${o.status === 'CONFIRMED' ? `<button class="btn btn-sm btn-outline-warning" onclick="updateOrderStatus(${o.id},'PACKED')">Pack</button>` : ''}
+            </td>
+        </tr>
+    `).join('');
+    document.getElementById('orders-table').innerHTML = rows || '<tr><td colspan="6" class="text-center text-muted p-4">No orders yet</td></tr>';
+}
+
+async function viewOrder(id) {
+    const res = await fetch(`${API}/admin/orders/${id}`, { headers: authHeaders() });
+    const o = await res.json();
+    document.getElementById('order-detail-body').innerHTML = `<pre>${JSON.stringify(o, null, 2)}</pre>`;
+    new bootstrap.Modal(document.getElementById('orderModal')).show();
+}
+
+async function updateOrderStatus(id, status) {
+    await fetch(`${API}/admin/orders/${id}/status`, {
+        method: 'PUT', headers: authHeaders(), body: JSON.stringify({status})
+    });
+    loadOrders();
+}
+
+// --- Stock ---
+async function loadStock() {
+    const res = await fetch(`${API}/admin/stock`, { headers: authHeaders() });
+    const stocks = await res.json();
+    const rows = stocks.map(s => `
+        <tr>
+            <td><strong>${s.product_name}</strong></td>
+            <td>${s.quantity}</td>
+            <td>${s.low_stock_threshold}</td>
+            <td>${s.is_low_stock ? '<span class="badge bg-danger">Low Stock</span>' : '<span class="badge bg-success">OK</span>'}</td>
+            <td>
+                <div class="input-group input-group-sm" style="width:200px">
+                    <input type="number" class="form-control" id="stock-${s.product_id}" value="${s.quantity}" step="1">
+                    <button class="btn btn-outline-primary" onclick="updateStock(${s.product_id})">Update</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    document.getElementById('stock-table').innerHTML = rows;
+}
+
+async function updateStock(productId) {
+    const qty = parseFloat(document.getElementById(`stock-${productId}`).value);
+    await fetch(`${API}/admin/stock/${productId}`, {
+        method: 'PUT', headers: authHeaders(),
+        body: JSON.stringify({quantity: qty, reason: 'ADJUSTMENT'})
+    });
+    loadStock();
+}
+
+// --- Images ---
+async function loadImages() {
+    const res = await fetch(`${API}/products?page_size=100`);
+    const d = await res.json();
+    const cards = d.items.map(p => `
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <img src="${p.primary_image || ''}" class="card-img-top" style="height:200px;object-fit:cover"
+                     onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><rect fill=%22%23eee%22 width=%22200%22 height=%22200%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23999%22>No Image</text></svg>'">
+                <div class="card-body text-center">
+                    <h6>${p.name}</h6>
+                    <input type="file" accept="image/*" class="form-control form-control-sm mt-2" onchange="uploadImage(${p.id}, this)">
+                </div>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('images-grid').innerHTML = cards;
+}
+
+async function uploadImage(productId, input) {
+    const file = input.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API}/admin/products/${productId}/image`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${TOKEN}` },
+        body: formData
+    });
+    if (res.ok) {
+        loadImages();
+    } else {
+        alert('Upload failed');
+    }
+}
+</script>
+</body>
+</html>
