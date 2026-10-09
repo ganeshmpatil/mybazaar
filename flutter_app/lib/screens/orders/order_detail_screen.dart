@@ -1,10 +1,16 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/order.dart';
 import '../../providers/order_provider.dart';
-import '../tracking/delivery_tracking_screen.dart';
+import '../../services/api_service.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final int orderId;
@@ -18,10 +24,75 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Order? _order;
   bool _isLoading = true;
 
+  // Live tracking state
+  static const _storeLocation = LatLng(21.0191, 75.3575);
+  final ApiService _api = ApiService();
+  final MapController _mapController = MapController();
+  LatLng? _deliveryBoyLocation;
+  List<LatLng> _routePoints = [];
+  String _deliveryBoyName = '';
+  Timer? _pollTimer;
+
   @override
   void initState() {
     super.initState();
     _loadOrder();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startTracking() {
+    _fetchLocation();
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchLocation());
+  }
+
+  Future<void> _fetchLocation() async {
+    try {
+      final token = await _api.token;
+      if (token == null) return;
+
+      final locRes = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/tracking/location/${widget.orderId}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (locRes.statusCode == 200) {
+        final data = jsonDecode(locRes.body);
+        if (data['latitude'] != null && mounted) {
+          setState(() {
+            _deliveryBoyLocation = LatLng(
+              (data['latitude'] as num).toDouble(),
+              (data['longitude'] as num).toDouble(),
+            );
+            _deliveryBoyName = data['delivery_boy_name'] ?? 'Delivery Partner';
+          });
+        }
+      }
+
+      final routeRes = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/tracking/route/${widget.orderId}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (routeRes.statusCode == 200) {
+        final points = jsonDecode(routeRes.body) as List;
+        if (mounted) {
+          setState(() {
+            _routePoints = points
+                .map((p) => LatLng(
+                      (p['lat'] as num).toDouble(),
+                      (p['lng'] as num).toDouble(),
+                    ))
+                .toList();
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Tracking error: $e');
+    }
   }
 
   Future<void> _loadOrder() async {
@@ -32,6 +103,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         _order = order;
         _isLoading = false;
       });
+      if (order != null && order.status == 'OUT_FOR_DELIVERY') {
+        _startTracking();
+      }
     }
   }
 
@@ -253,33 +327,158 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           ),
                         ],
 
-                        // Track delivery button
+                        // Live tracking map
                         if (_order!.status == 'OUT_FOR_DELIVERY') ...[
                           const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => DeliveryTrackingScreen(
-                                      orderId: widget.orderId,
-                                      orderNumber: _order!.orderNumber,
+                          _sectionTitle('Live Tracking'),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 300,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.divider),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Stack(
+                              children: [
+                                FlutterMap(
+                                  mapController: _mapController,
+                                  options: MapOptions(
+                                    initialCenter: _deliveryBoyLocation ?? _storeLocation,
+                                    initialZoom: 14,
+                                  ),
+                                  children: [
+                                    TileLayer(
+                                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                      userAgentPackageName: 'com.mybazaar.app',
+                                    ),
+                                    if (_routePoints.length > 1)
+                                      PolylineLayer(
+                                        polylines: [
+                                          Polyline(
+                                            points: _routePoints,
+                                            strokeWidth: 4,
+                                            color: Colors.blue.withValues(alpha: 0.7),
+                                          ),
+                                        ],
+                                      ),
+                                    MarkerLayer(
+                                      markers: [
+                                        Marker(
+                                          point: _storeLocation,
+                                          width: 36,
+                                          height: 36,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(color: Colors.white, width: 2),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.2),
+                                                  blurRadius: 4,
+                                                ),
+                                              ],
+                                            ),
+                                            child: const Icon(Icons.store, color: Colors.white, size: 18),
+                                          ),
+                                        ),
+                                        if (_deliveryBoyLocation != null)
+                                          Marker(
+                                            point: _deliveryBoyLocation!,
+                                            width: 36,
+                                            height: 36,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue,
+                                                shape: BoxShape.circle,
+                                                border: Border.all(color: Colors.white, width: 2),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withValues(alpha: 0.2),
+                                                    blurRadius: 4,
+                                                  ),
+                                                ],
+                                              ),
+                                              child: const Icon(Icons.delivery_dining, color: Colors.white, size: 18),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                // Delivery boy info overlay
+                                if (_deliveryBoyLocation != null)
+                                  Positioned(
+                                    top: 8,
+                                    left: 8,
+                                    right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(10),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.1),
+                                            blurRadius: 8,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: const BoxDecoration(
+                                              color: Colors.green,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Icon(Icons.delivery_dining, color: Colors.blue, size: 18),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              _deliveryBoyName.isNotEmpty ? _deliveryBoyName : 'Delivery Partner',
+                                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                            ),
+                                          ),
+                                          Text(
+                                            'On the way',
+                                            style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w500),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                );
-                              },
-                              icon: const Icon(Icons.location_on),
-                              label: const Text('Track Delivery'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                // Recenter button
+                                Positioned(
+                                  bottom: 8,
+                                  right: 8,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      final center = _deliveryBoyLocation ?? _storeLocation;
+                                      _mapController.move(center, 15);
+                                    },
+                                    child: Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.15),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(Icons.my_location, size: 20, color: Colors.blue),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ],

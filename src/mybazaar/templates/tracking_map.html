@@ -106,7 +106,7 @@ async function adminLogin() {
     // Send OTP
     await fetch(`${API}/auth/send-otp`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({mobile: '9876543210'})
+        body: JSON.stringify({mobile: '9930668736'})
     });
 
     // Auto-get OTP from Redis (dev mode shortcut)
@@ -115,7 +115,7 @@ async function adminLogin() {
 
     const res = await fetch(`${API}/auth/verify-otp`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({mobile: '9876543210', otp: prompt_otp})
+        body: JSON.stringify({mobile: '9930668736', otp: prompt_otp})
     });
     if (res.ok) {
         const data = await res.json();
