@@ -40,8 +40,8 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image area
-            Expanded(
-              flex: 5,
+            AspectRatio(
+              aspectRatio: 1.1,
               child: Stack(
                 children: [
                   Container(
@@ -60,47 +60,43 @@ class ProductCard extends StatelessWidget {
                             child: CachedNetworkImage(
                               imageUrl: product.primaryImage!,
                               fit: BoxFit.cover,
-                              placeholder: (_, __) =>
-                                  _placeholderIcon(),
-                              errorWidget: (_, __, ___) =>
-                                  _placeholderIcon(),
+                              placeholder: (_, __) => _placeholderIcon(),
+                              errorWidget: (_, __, ___) => _placeholderIcon(),
                             ),
                           )
                         : _placeholderIcon(),
                   ),
-                  // Discount badge
                   if (product.hasDiscount)
                     Positioned(
-                      top: 8,
-                      left: 8,
+                      top: 6,
+                      left: 6,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                            horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           color: AppColors.discount,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
                           '${product.discountPercent.toStringAsFixed(0)}% OFF',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
+                            fontSize: 9,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
                     ),
-                  // Unit badge
                   if (product.unit != null)
                     Positioned(
-                      top: 8,
-                      right: 8,
+                      top: 6,
+                      right: 6,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                            horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(5),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.08),
@@ -112,7 +108,7 @@ class ProductCard extends StatelessWidget {
                           product.unitLabel,
                           style: TextStyle(
                             color: AppColors.textSecondary,
-                            fontSize: 10,
+                            fontSize: 9,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -123,89 +119,83 @@ class ProductCard extends StatelessWidget {
             ),
 
             // Product info
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        height: 1.2,
-                      ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
-                    const Spacer(),
-                    // Price row
-                    Row(
-                      children: [
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        '₹${product.sellingPrice.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      if (product.hasDiscount) ...[
+                        const SizedBox(width: 4),
                         Text(
-                          '₹${product.sellingPrice.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
+                          '₹${product.mrp.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textLight,
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: AppColors.textLight,
                           ),
                         ),
-                        if (product.hasDiscount) ...[
-                          const SizedBox(width: 6),
-                          Text(
-                            '₹${product.mrp.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textLight,
-                              decoration: TextDecoration.lineThrough,
-                              decorationColor: AppColors.textLight,
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 30,
+                    child: product.inStock
+                        ? ElevatedButton(
+                            onPressed: () => onAddToCart(product, 1),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              padding: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(7),
+                              ),
+                            ),
+                            child: const Text(
+                              'Add',
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
+                          )
+                        : Container(
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: Text(
+                              'Out of Stock',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: AppColors.textLight,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    // Add button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 32,
-                      child: product.inStock
-                          ? ElevatedButton(
-                              onPressed: () => onAddToCart(product, 1),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                padding: EdgeInsets.zero,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text(
-                                'Add',
-                                style: TextStyle(
-                                    fontSize: 13, fontWeight: FontWeight.w600),
-                              ),
-                            )
-                          : Container(
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'Out of Stock',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textLight,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],

@@ -26,7 +26,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.initState();
     final presets = widget.product.weightPresets;
     if (presets.isNotEmpty) {
-      // Default to the second option (typically "1 KG" or "1 L")
       _selectedVariant = presets.length > 1 ? presets[1] : presets[0];
       _quantity = widget.product.presetToQuantity(_selectedVariant);
     }
@@ -58,34 +57,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final product = widget.product;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // App bar with image
+          // Compact image header
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 220,
             pinned: true,
-            backgroundColor: AppColors.cardBg,
+            backgroundColor: Colors.white,
             leading: _circleButton(
               icon: Icons.arrow_back_ios_new_rounded,
               onTap: () => Navigator.pop(context),
             ),
-            actions: [
-              _circleButton(
-                icon: Icons.shopping_cart_outlined,
-                onTap: () => Navigator.pop(context),
-              ),
-              const SizedBox(width: 8),
-            ],
             flexibleSpace: FlexibleSpaceBar(
-              background: product.primaryImage != null
-                  ? CachedNetworkImage(
-                      imageUrl: product.primaryImage!,
-                      fit: BoxFit.contain,
-                      placeholder: (_, __) => _placeholder(),
-                      errorWidget: (_, __, ___) => _placeholder(),
-                    )
-                  : _placeholder(),
+              background: Container(
+                color: AppColors.cardBg,
+                child: product.primaryImage != null
+                    ? CachedNetworkImage(
+                        imageUrl: product.primaryImage!,
+                        fit: BoxFit.contain,
+                        placeholder: (_, __) => _placeholder(),
+                        errorWidget: (_, __, ___) => _placeholder(),
+                      )
+                    : _placeholder(),
+              ),
             ),
           ),
 
@@ -94,14 +89,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
+              transform: Matrix4.translationValues(0, -20, 0),
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Name and stock status
+                    // Name + stock
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -109,26 +105,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           child: Text(
                             product.name,
                             style: const TextStyle(
-                              fontSize: 24,
+                              fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: product.inStock
                                 ? AppColors.success.withValues(alpha: 0.1)
                                 : AppColors.error.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             product.inStock ? 'In Stock' : 'Out of Stock',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: product.inStock
                                   ? AppColors.success
@@ -138,64 +133,55 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
 
-                    // Price
+                    // Price row
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          '₹${product.sellingPrice.toStringAsFixed(0)}',
+                          '\u20B9${product.sellingPrice.toStringAsFixed(0)}',
                           style: const TextStyle(
-                            fontSize: 32,
+                            fontSize: 26,
                             fontWeight: FontWeight.w700,
                             color: AppColors.primary,
                           ),
                         ),
                         if (product.unit != null) ...[
-                          const SizedBox(width: 4),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Text(
-                              '/${product.unit}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: AppColors.textSecondary,
-                              ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '/${product.unit}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
                         if (product.hasDiscount) ...[
-                          const SizedBox(width: 12),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Text(
-                              '₹${product.mrp.toStringAsFixed(0)}',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: AppColors.textLight,
-                                decoration: TextDecoration.lineThrough,
-                                decorationColor: AppColors.textLight,
-                              ),
+                          const SizedBox(width: 10),
+                          Text(
+                            '\u20B9${product.mrp.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: AppColors.textLight,
+                              decoration: TextDecoration.lineThrough,
+                              decorationColor: AppColors.textLight,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppColors.discount,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '${product.discountPercent.toStringAsFixed(0)}% OFF',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.discount,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              '${product.discountPercent.toStringAsFixed(0)}% OFF',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -203,52 +189,109 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
 
-                    // ── Weight / Size Selector ──
-                    if (_hasVariants) ...[
+                    // Attributes / Product Details
+                    if (product.attributes != null &&
+                        product.attributes!.isNotEmpty) ...[
                       const Text(
-                        'Select Quantity',
+                        'Product Details',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          children: product.attributes!.entries
+                              .where((e) => e.value is! bool || e.value == true)
+                              .map((e) => Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 100,
+                                          child: Text(
+                                            _attrLabel(e.key),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.textSecondary,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            e.value is bool
+                                                ? (e.value ? 'Yes' : 'No')
+                                                : e.value.toString(),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Weight / Size Selector
+                    if (_hasVariants) ...[
+                      const Text(
+                        'Select Quantity',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       VariantSelector(
                         options: product.weightPresets,
                         selected: _selectedVariant,
                         onSelected: (variant) {
                           setState(() {
                             _selectedVariant = variant;
-                            _quantity =
-                                product.presetToQuantity(variant);
+                            _quantity = product.presetToQuantity(variant);
                           });
                         },
                       ),
-                      const SizedBox(height: 16),
-                      // Show calculated total
+                      const SizedBox(height: 10),
                       Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: AppColors.cardBg,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '$_selectedVariant × ₹${product.sellingPrice.toStringAsFixed(0)}/${product.unit}',
+                              '$_selectedVariant \u00D7 \u20B9${product.sellingPrice.toStringAsFixed(0)}/${product.unit}',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 color: AppColors.textSecondary,
                               ),
                             ),
                             Text(
-                              '₹${_totalPrice.toStringAsFixed(0)}',
+                              '\u20B9${_totalPrice.toStringAsFixed(0)}',
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.primary,
                               ),
@@ -257,16 +300,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ),
                     ] else ...[
-                      // Simple quantity selector for "pcs" items
                       const Text(
                         'Quantity',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           QuantityStepper(
@@ -276,9 +318,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ),
                           const Spacer(),
                           Text(
-                            '₹${_totalPrice.toStringAsFixed(0)}',
+                            '\u20B9${_totalPrice.toStringAsFixed(0)}',
                             style: const TextStyle(
-                              fontSize: 22,
+                              fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: AppColors.primary,
                             ),
@@ -287,7 +329,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ],
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
 
                     // Description
                     if (product.description != null &&
@@ -295,36 +337,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       const Text(
                         'Description',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
                         product.description!,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           color: AppColors.textSecondary,
-                          height: 1.5,
+                          height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                     ],
 
-                    // Product info chips
+                    // Info chips
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 6,
+                      runSpacing: 6,
                       children: [
                         if (product.gstPercent != null)
                           _infoChip('GST: ${product.gstPercent!.toStringAsFixed(0)}%'),
-                        _infoChip('Payment: Cash on Delivery'),
-                        _infoChip('Delivery: Same Day'),
+                        _infoChip('Cash on Delivery'),
+                        _infoChip('Same Day Delivery'),
                       ],
                     ),
 
-                    const SizedBox(height: 100), // Space for bottom button
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -335,7 +377,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
       // Add to Cart button
       bottomSheet: Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
@@ -349,14 +391,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         child: SafeArea(
           child: SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 50,
             child: ElevatedButton(
               onPressed: product.inStock && !_addedToCart ? _addToCart : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     _addedToCart ? AppColors.success : AppColors.primary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
               child: Row(
@@ -366,15 +408,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     _addedToCart
                         ? Icons.check_circle_rounded
                         : Icons.shopping_cart_rounded,
-                    size: 22,
+                    size: 20,
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Text(
                     _addedToCart
                         ? 'Added to Cart!'
-                        : 'Add to Cart  •  ₹${_totalPrice.toStringAsFixed(0)}',
+                        : 'Add to Cart  \u2022  \u20B9${_totalPrice.toStringAsFixed(0)}',
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                        fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -385,11 +427,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
+  String _attrLabel(String key) {
+    return key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+  }
+
   Widget _placeholder() {
     return Center(
       child: Icon(
         Icons.shopping_basket_outlined,
-        size: 80,
+        size: 60,
         color: AppColors.primary.withValues(alpha: 0.2),
       ),
     );
@@ -407,7 +457,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             color: Colors.white.withValues(alpha: 0.9),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, size: 20, color: AppColors.textPrimary),
+          child: Icon(icon, size: 18, color: AppColors.textPrimary),
         ),
       ),
     );
@@ -415,16 +465,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Widget _infoChip(String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppColors.divider),
       ),
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           color: AppColors.textSecondary,
           fontWeight: FontWeight.w500,
         ),

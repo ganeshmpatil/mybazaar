@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'MyBazaar',
+                          'Gharpoch Kirana',
                           style: TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.w700,
@@ -130,6 +130,106 @@ class _HomeScreenState extends State<HomeScreen> {
             // Categories
             const CategoryBar(),
 
+            // Attribute Filters
+            Consumer<ProductProvider>(
+              builder: (_, provider, __) {
+                if (provider.availableFilters.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Container(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (provider.hasActiveFilters)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            children: [
+                              ...provider.activeFilters.entries.map((e) =>
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: Chip(
+                                    label: Text(
+                                      '${_filterLabel(e.key)}: ${e.value}',
+                                      style: const TextStyle(fontSize: 11, color: Colors.white),
+                                    ),
+                                    backgroundColor: AppColors.primary,
+                                    deleteIcon: const Icon(Icons.close, size: 14, color: Colors.white),
+                                    onDeleted: () => provider.removeFilter(e.key),
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => provider.clearFilters(),
+                                child: Text(
+                                  'Clear all',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: provider.availableFilters.entries
+                              .where((e) => !provider.activeFilters.containsKey(e.key))
+                              .map((entry) => Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: PopupMenuButton<String>(
+                                      onSelected: (value) =>
+                                          provider.setFilter(entry.key, value),
+                                      itemBuilder: (_) => entry.value
+                                          .map((v) => PopupMenuItem(
+                                                value: v,
+                                                child: Text(v, style: const TextStyle(fontSize: 13)),
+                                              ))
+                                          .toList(),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: AppColors.divider),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              _filterLabel(entry.key),
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppColors.textSecondary,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Icon(Icons.keyboard_arrow_down,
+                                                size: 16,
+                                                color: AppColors.textLight),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
             // Products grid
             Expanded(
               child: Consumer<ProductProvider>(
@@ -166,9 +266,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.68,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
                       ),
                       itemCount: provider.products.length +
                           (provider.hasMore ? 1 : 0),
@@ -199,6 +299,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  String _filterLabel(String key) {
+    return key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
   }
 
   Widget _iconButton(IconData icon, VoidCallback onTap) {

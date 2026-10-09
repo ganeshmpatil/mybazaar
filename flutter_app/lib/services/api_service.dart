@@ -131,6 +131,7 @@ class ApiService {
     int pageSize = 20,
     int? categoryId,
     String? search,
+    Map<String, String>? filters,
   }) async {
     final params = <String, String>{
       'page': page.toString(),
@@ -138,8 +139,24 @@ class ApiService {
     };
     if (categoryId != null) params['category_id'] = categoryId.toString();
     if (search != null && search.isNotEmpty) params['search'] = search;
+    if (filters != null && filters.isNotEmpty) {
+      params['filters'] = jsonEncode(filters);
+    }
 
     final uri = Uri.parse(ApiConfig.productsUrl).replace(queryParameters: params);
+    final resp = await _client.get(uri, headers: _headers()).timeout(_timeout);
+    return await _handleResponse(resp);
+  }
+
+  Future<Map<String, dynamic>> getFilters({
+    int? categoryId,
+    String? search,
+  }) async {
+    final params = <String, String>{};
+    if (categoryId != null) params['category_id'] = categoryId.toString();
+    if (search != null && search.isNotEmpty) params['search'] = search;
+
+    final uri = Uri.parse('${ApiConfig.productsUrl}/filters').replace(queryParameters: params);
     final resp = await _client.get(uri, headers: _headers()).timeout(_timeout);
     return await _handleResponse(resp);
   }

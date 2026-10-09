@@ -32,6 +32,7 @@ class _MainShellState extends State<MainShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductProvider>().loadCategories();
       context.read<ProductProvider>().loadProducts(refresh: true);
+      context.read<ProductProvider>().loadFilters();
       context.read<CartProvider>().loadCart();
     });
   }

@@ -24,7 +24,10 @@ def create_category(db: Session, name: str, parent_id: int | None = None,
 
 
 def get_products(db: Session, category_id: int | None = None, search: str | None = None,
-                 page: int = 1, page_size: int = 20, active_only: bool = True):
+                 page: int = 1, page_size: int = 20, active_only: bool = True,
+                 attribute_filters: str | None = None):
+    import json as _json
+
     query = db.query(Product).options(joinedload(Product.images), joinedload(Product.stock))
 
     if active_only:
@@ -33,6 +36,17 @@ def get_products(db: Session, category_id: int | None = None, search: str | None
         query = query.filter(Product.category_id == category_id)
     if search:
         query = query.filter(Product.name.ilike(f"%{search}%"))
+
+    # Apply JSONB attribute filters
+    if attribute_filters:
+        try:
+            attr_dict = _json.loads(attribute_filters)
+            for key, value in attr_dict.items():
+                query = query.filter(
+                    Product.attributes[key].astext == str(value)
+                )
+        except (ValueError, TypeError):
+            pass
 
     total = query.count()
     products = query.offset((page - 1) * page_size).limit(page_size).all()

@@ -1,3 +1,11 @@
+import '../config/api_config.dart';
+
+String? _resolveImageUrl(String? url) {
+  if (url == null || url.isEmpty) return null;
+  if (url.startsWith('http')) return url;
+  return '${ApiConfig.baseUrl}$url';
+}
+
 class Category {
   final int id;
   final String name;
@@ -165,7 +173,7 @@ class Product {
       mrp: double.tryParse((json['mrp'] ?? '0').toString()) ?? 0,
       sellingPrice: double.tryParse((json['selling_price'] ?? '0').toString()) ?? 0,
       unit: json['unit'],
-      primaryImage: json['primary_image'],
+      primaryImage: _resolveImageUrl(json['primary_image']),
       stockQuantity: json['stock_quantity'] != null
           ? double.parse(json['stock_quantity'].toString())
           : null,
@@ -198,7 +206,7 @@ class ProductImage {
   factory ProductImage.fromJson(Map<String, dynamic> json) {
     return ProductImage(
       id: json['id'] ?? 0,
-      imageUrl: json['image_url'] ?? '',
+      imageUrl: _resolveImageUrl(json['image_url']) ?? '',
       sortOrder: json['sort_order'] ?? 0,
       isPrimary: json['is_primary'] ?? false,
     );

@@ -27,7 +27,7 @@ class MyBazaarApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderProvider(apiService)),
       ],
       child: MaterialApp(
-        title: 'MyBazaar',
+        title: 'Gharpoch Kirana',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const SplashScreen(),

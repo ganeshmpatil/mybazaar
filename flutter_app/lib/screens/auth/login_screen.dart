@@ -71,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 32),
               const Text(
-                'Welcome to\nMyBazaar',
+                'Welcome to\nGharpoch Kirana',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,

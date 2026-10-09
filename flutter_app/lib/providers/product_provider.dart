@@ -15,6 +15,10 @@ class ProductProvider extends ChangeNotifier {
   String _searchQuery = '';
   String? _error;
 
+  // Filters
+  Map<String, List<String>> _availableFilters = {};
+  Map<String, String> _activeFilters = {};
+
   ProductProvider(this._api);
 
   List<Product> get products => _products;
@@ -24,6 +28,9 @@ class ProductProvider extends ChangeNotifier {
   bool get hasMore => _hasMore;
   int? get selectedCategoryId => _selectedCategoryId;
   String? get error => _error;
+  Map<String, List<String>> get availableFilters => _availableFilters;
+  Map<String, String> get activeFilters => _activeFilters;
+  bool get hasActiveFilters => _activeFilters.isNotEmpty;
 
   Future<void> loadCategories() async {
     try {
@@ -32,6 +39,24 @@ class ProductProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to load categories: $e');
+    }
+  }
+
+  Future<void> loadFilters() async {
+    try {
+      final data = await _api.getFilters(
+        categoryId: _selectedCategoryId,
+        search: _searchQuery.isNotEmpty ? _searchQuery : null,
+      );
+      final raw = data['filters'] as Map<String, dynamic>? ?? {};
+      _availableFilters = raw.map(
+        (k, v) => MapEntry(k, (v as List).map((e) => e.toString()).toList()),
+      );
+      // Remove active filters that no longer apply
+      _activeFilters.removeWhere((k, _) => !_availableFilters.containsKey(k));
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to load filters: $e');
     }
   }
 
@@ -52,6 +77,7 @@ class ProductProvider extends ChangeNotifier {
         page: _currentPage,
         categoryId: _selectedCategoryId,
         search: _searchQuery.isNotEmpty ? _searchQuery : null,
+        filters: _activeFilters.isNotEmpty ? _activeFilters : null,
       );
 
       final items = (data['items'] as List<dynamic>)
@@ -79,11 +105,30 @@ class ProductProvider extends ChangeNotifier {
 
   void selectCategory(int? categoryId) {
     _selectedCategoryId = categoryId;
+    _activeFilters.clear();
+    loadFilters();
     loadProducts(refresh: true);
   }
 
   void search(String query) {
     _searchQuery = query;
+    _activeFilters.clear();
+    loadFilters();
+    loadProducts(refresh: true);
+  }
+
+  void setFilter(String key, String value) {
+    _activeFilters[key] = value;
+    loadProducts(refresh: true);
+  }
+
+  void removeFilter(String key) {
+    _activeFilters.remove(key);
+    loadProducts(refresh: true);
+  }
+
+  void clearFilters() {
+    _activeFilters.clear();
     loadProducts(refresh: true);
   }
 
