@@ -55,6 +55,15 @@ def get_addresses(user: User = Depends(get_current_user), db: Session = Depends(
     return db.query(Address).filter(Address.user_id == user.id).all()
 
 
+@router.delete("/addresses/{address_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_address(address_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    address = db.query(Address).filter(Address.id == address_id, Address.user_id == user.id).first()
+    if not address:
+        raise HTTPException(status_code=404, detail="Address not found")
+    db.delete(address)
+    db.commit()
+
+
 @router.post("/addresses", response_model=AddressResponse, status_code=status.HTTP_201_CREATED)
 def add_address(data: AddressCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     address = Address(
