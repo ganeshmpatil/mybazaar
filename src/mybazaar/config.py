@@ -24,8 +24,8 @@ class Settings(BaseSettings):
 
     # Store
     store_name: str = "MyBazaar"
-    store_lat: float = 19.876
-    store_lng: float = 75.343
+    store_lat: float = 21.0191
+    store_lng: float = 75.3575
     delivery_radius_km: int = 20
 
     # MinIO / S3

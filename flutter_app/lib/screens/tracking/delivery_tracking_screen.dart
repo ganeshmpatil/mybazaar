@@ -26,8 +26,8 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen> {
   final MapController _mapController = MapController();
   final ApiService _api = ApiService();
 
-  // Store location (Aurangabad area)
-  static const _storeLocation = LatLng(19.876, 75.343);
+  // Store location (Pimpri Dharangaon, Jalgaon)
+  static const _storeLocation = LatLng(21.0191, 75.3575);
 
   LatLng? _deliveryBoyLocation;
   List<LatLng> _routePoints = [];

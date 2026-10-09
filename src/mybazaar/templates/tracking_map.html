@@ -95,7 +95,7 @@ const customerIcon = L.divIcon({
 // Add store marker
 L.marker([STORE_LAT, STORE_LNG], {icon: storeIcon})
     .addTo(map)
-    .bindPopup('<strong>MyBazaar Store</strong><br>Main location');
+    .bindPopup('<strong>MyBazaar Store</strong><br>Pimpri Dharangaon, Jalgaon');
 
 // Track markers and routes
 const deliveryMarkers = {};
@@ -211,16 +211,16 @@ function simulateDelivery() {
         return;
     }
 
-    // Simulate a delivery boy moving from store to a nearby point
-    const destLat = STORE_LAT + 0.008;
-    const destLng = STORE_LNG + 0.006;
+    // Simulate a delivery boy moving from store to Village Waghlud, Dharangaon
+    const destLat = 20.9950;
+    const destLng = 75.3800;
     const steps = 30;
     simStep = 0;
 
     // Add a simulated customer marker
     L.marker([destLat, destLng], {icon: customerIcon})
         .addTo(map)
-        .bindPopup('<strong>Customer Location</strong><br>Delivery destination');
+        .bindPopup('<strong>Customer Location</strong><br>Village Waghlud, Dharangaon');
 
     // Create simulated delivery marker
     if (!deliveryMarkers['sim']) {
