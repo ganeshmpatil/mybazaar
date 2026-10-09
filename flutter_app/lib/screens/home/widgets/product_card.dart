@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../config/strings.dart';
 import '../../../config/theme.dart';
 import '../../../models/product.dart';
 import '../../product/product_detail_screen.dart';
@@ -59,8 +60,7 @@ class ProductCard extends StatelessWidget {
                             ),
                             child: CachedNetworkImage(
                               imageUrl: product.primaryImage!,
-                              fit: BoxFit.contain,
-                              alignment: Alignment.center,
+                              fit: BoxFit.cover,
                               placeholder: (_, __) => _placeholderIcon(),
                               errorWidget: (_, __, ___) => _placeholderIcon(),
                             ),
@@ -174,8 +174,8 @@ class ProductCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(7),
                               ),
                             ),
-                            child: const Text(
-                              'Add',
+                            child: Text(
+                              tr('add'),
                               style: TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w600),
                             ),
@@ -187,7 +187,7 @@ class ProductCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(7),
                             ),
                             child: Text(
-                              'Out of Stock',
+                              tr('out_of_stock'),
                               style: TextStyle(
                                 fontSize: 10,
                                 color: AppColors.textLight,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../config/strings.dart';
 import '../../config/theme.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/cart_provider.dart';
@@ -58,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Gharpoch Kirana',
+                          tr('app_name'),
                           style: TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.w700,
@@ -72,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 size: 14, color: AppColors.primary),
                             const SizedBox(width: 4),
                             Text(
-                              'Delivering near you',
+                              tr('delivering_near'),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.textSecondary,
@@ -100,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search groceries, fruits, oil...',
+                  hintText: tr('search_hint'),
                   hintStyle: TextStyle(
                     color: AppColors.textLight,
                     fontSize: 14,
@@ -166,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               GestureDetector(
                                 onTap: () => provider.clearFilters(),
                                 child: Text(
-                                  'Clear all',
+                                  tr('clear_all'),
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: AppColors.primary,
@@ -247,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               size: 64, color: AppColors.textLight),
                           const SizedBox(height: 16),
                           Text(
-                            'No products found',
+                            tr('no_products'),
                             style: TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 16,

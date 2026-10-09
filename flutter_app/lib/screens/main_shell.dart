@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/strings.dart';
 import '../config/theme.dart';
 import '../providers/cart_provider.dart';
 import '../providers/product_provider.dart';
@@ -58,25 +59,25 @@ class _MainShellState extends State<MainShell> {
           currentIndex: _currentIndex,
           onTap: (i) => setState(() => _currentIndex = i),
           items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Home',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.home_rounded),
+              activeIcon: const Icon(Icons.home_rounded),
+              label: tr('nav_home'),
             ),
             BottomNavigationBarItem(
               icon: _buildCartIcon(false),
               activeIcon: _buildCartIcon(true),
-              label: 'Cart',
+              label: tr('nav_cart'),
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long_rounded),
-              activeIcon: Icon(Icons.receipt_long_rounded),
-              label: 'Orders',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.receipt_long_rounded),
+              activeIcon: const Icon(Icons.receipt_long_rounded),
+              label: tr('nav_orders'),
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded),
-              activeIcon: Icon(Icons.person_rounded),
-              label: 'Profile',
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.person_outline_rounded),
+              activeIcon: const Icon(Icons.person_rounded),
+              label: tr('nav_profile'),
             ),
           ],
         ),

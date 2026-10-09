@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../config/strings.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import 'otp_screen.dart';
@@ -20,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _sendOtp() async {
     final mobile = _phoneController.text.trim();
     if (mobile.length != 10) {
-      setState(() => _error = 'Enter a valid 10-digit mobile number');
+      setState(() => _error = tr('enter_valid_mobile'));
       return;
     }
     setState(() {
@@ -34,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => OtpScreen(mobile: mobile)),
       );
     } catch (e) {
-      setState(() => _error = 'Failed to send OTP. Please try again.');
+      setState(() => _error = tr('otp_send_failed'));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -70,9 +71,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              const Text(
-                'Welcome to\nGharpoch Kirana',
-                style: TextStyle(
+              Text(
+                '${tr('welcome_to')}\n${tr('app_name')}',
+                style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -80,9 +81,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Enter your mobile number to get started',
-                style: TextStyle(
+              Text(
+                tr('enter_mobile'),
+                style: const TextStyle(
                   fontSize: 15,
                   color: AppColors.textSecondary,
                 ),
@@ -123,8 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontWeight: FontWeight.w500,
                           letterSpacing: 1.5,
                         ),
-                        decoration: const InputDecoration(
-                          hintText: 'Mobile Number',
+                        decoration: InputDecoration(
+                          hintText: tr('mobile_number'),
                           border: InputBorder.none,
                           filled: false,
                           contentPadding: EdgeInsets.symmetric(vertical: 14),
@@ -162,13 +163,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Continue', style: TextStyle(fontSize: 17)),
+                      : Text(tr('continue_btn'), style: const TextStyle(fontSize: 17)),
                 ),
               ),
               const SizedBox(height: 16),
               Center(
                 child: Text(
-                  'We\'ll send a 4-digit OTP to verify',
+                  tr('otp_verify_hint'),
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textLight,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import '../../config/strings.dart';
 import '../../config/theme.dart';
 import '../../models/product.dart';
 import '../../providers/cart_provider.dart';
@@ -75,7 +76,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: product.primaryImage != null
                     ? CachedNetworkImage(
                         imageUrl: product.primaryImage!,
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
                         placeholder: (_, __) => _placeholder(),
                         errorWidget: (_, __, ___) => _placeholder(),
                       )
@@ -121,7 +122,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            product.inStock ? 'In Stock' : 'Out of Stock',
+                            product.inStock ? tr('in_stock') : tr('out_of_stock'),
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -194,8 +195,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     // Attributes / Product Details
                     if (product.attributes != null &&
                         product.attributes!.isNotEmpty) ...[
-                      const Text(
-                        'Product Details',
+                      Text(
+                        tr('product_details'),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -252,8 +253,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                     // Weight / Size Selector
                     if (_hasVariants) ...[
-                      const Text(
-                        'Select Quantity',
+                      Text(
+                        tr('select_quantity'),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -300,8 +301,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ),
                     ] else ...[
-                      const Text(
-                        'Quantity',
+                      Text(
+                        tr('quantity'),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -334,8 +335,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     // Description
                     if (product.description != null &&
                         product.description!.isNotEmpty) ...[
-                      const Text(
-                        'Description',
+                      Text(
+                        tr('description'),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -361,8 +362,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       children: [
                         if (product.gstPercent != null)
                           _infoChip('GST: ${product.gstPercent!.toStringAsFixed(0)}%'),
-                        _infoChip('Cash on Delivery'),
-                        _infoChip('Same Day Delivery'),
+                        _infoChip(tr('cash_on_delivery')),
+                        _infoChip(tr('same_day_delivery')),
                       ],
                     ),
 
@@ -413,7 +414,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(width: 8),
                   Text(
                     _addedToCart
-                        ? 'Added to Cart!'
+                        ? tr('added_to_cart')
                         : 'Add to Cart  \u2022  \u20B9${_totalPrice.toStringAsFixed(0)}',
                     style: const TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w600),

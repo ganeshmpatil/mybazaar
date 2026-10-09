@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../config/strings.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
@@ -57,21 +58,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = context.watch<LanguageProvider>();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(tr('profile')),
         automaticallyImplyLeading: false,
         actions: [
           if (!_isEditing)
             TextButton(
               onPressed: () => setState(() => _isEditing = true),
-              child: const Text('Edit'),
+              child: Text(tr('edit_profile')),
             )
           else
             TextButton(
               onPressed: _saveProfile,
-              child: const Text('Save'),
+              child: Text(tr('save')),
             ),
         ],
       ),
@@ -109,22 +112,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (_isEditing) ...[
                         TextField(
                           controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Name',
-                            prefixIcon: Icon(Icons.person_outline),
+                          decoration: InputDecoration(
+                            labelText: tr('name'),
+                            prefixIcon: const Icon(Icons.person_outline),
                           ),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: _emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: Icon(Icons.email_outlined),
+                          decoration: InputDecoration(
+                            labelText: tr('email'),
+                            prefixIcon: const Icon(Icons.email_outlined),
                           ),
                         ),
                       ] else ...[
                         Text(
-                          user.name ?? 'Set your name',
+                          user.name ?? tr('name'),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -158,6 +161,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 16),
 
+                // Language toggle
+                _menuCard([
+                  ListTile(
+                    leading: const Icon(Icons.language_rounded,
+                        color: AppColors.textPrimary),
+                    title: Text(
+                      tr('language'),
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 2, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _langChip('EN', AppLanguage.en, langProvider),
+                          const SizedBox(width: 2),
+                          _langChip('मराठी', AppLanguage.mr, langProvider),
+                        ],
+                      ),
+                    ),
+                  ),
+                ]),
+
+                const SizedBox(height: 16),
+
                 // Menu items
                 _menuCard([
                   _menuItem(Icons.location_on_outlined, 'My Addresses',
@@ -166,30 +199,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }),
                   _menuItem(Icons.help_outline_rounded, 'Help & Support',
                       onTap: () {}),
-                  _menuItem(Icons.info_outline_rounded, 'About MyBazaar',
-                      onTap: () {}),
                 ]),
 
                 const SizedBox(height: 16),
 
                 _menuCard([
-                  _menuItem(Icons.logout_rounded, 'Logout',
+                  _menuItem(Icons.logout_rounded, tr('logout'),
                       color: AppColors.error, onTap: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (_) => AlertDialog(
-                        title: const Text('Logout?'),
+                        title: Text(tr('logout')),
                         content: const Text(
                             'Are you sure you want to logout?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
+                            child: Text(tr('cancel')),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Logout',
-                                style: TextStyle(color: AppColors.error)),
+                            child: Text(tr('logout'),
+                                style: const TextStyle(color: AppColors.error)),
                           ),
                         ],
                       ),
@@ -210,7 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 32),
                 Text(
-                  'MyBazaar v1.0.0',
+                  '${tr('app_name')} v1.0.0',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textLight,
@@ -220,6 +251,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _langChip(String label, AppLanguage lang, LanguageProvider provider) {
+    final isActive = provider.language == lang;
+    return GestureDetector(
+      onTap: () => provider.setLanguage(lang),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }
