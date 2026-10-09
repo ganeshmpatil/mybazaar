@@ -157,8 +157,8 @@ class AppStrings {
     // Product
     'in_stock': 'उपलब्ध',
     'out_of_stock': 'उपलब्ध नाही',
-    'add': 'घाला',
-    'add_to_cart': 'कार्टमध्ये घाला',
+    'add': 'खरेदी करा',
+    'add_to_cart': 'कार्टमध्ये खरेदी करा',
     'added_to_cart': 'कार्टमध्ये जोडले!',
     'product_details': 'उत्पादन तपशील',
     'select_quantity': 'प्रमाण निवडा',

@@ -40,6 +40,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<LanguageProvider>();
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,

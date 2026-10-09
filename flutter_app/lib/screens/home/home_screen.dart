@@ -44,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch language changes to rebuild UI
+    context.watch<LanguageProvider>();
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(

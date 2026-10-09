@@ -1,0 +1,3 @@
+1. Place order not working - gives error "Something went wrong"
+2. Product detail page layout is bad - image misplaced, no text alignment, needs proper section containers
+3. Changing language to English on profile page does not update Marathi text on home page - strings not refreshing reactively

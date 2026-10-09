@@ -59,321 +59,331 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // Compact image header
-          SliverAppBar(
-            expandedHeight: 220,
-            pinned: true,
-            backgroundColor: Colors.white,
-            leading: _circleButton(
-              icon: Icons.arrow_back_ios_new_rounded,
-              onTap: () => Navigator.pop(context),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                color: AppColors.cardBg,
-                child: product.primaryImage != null
-                    ? CachedNetworkImage(
-                        imageUrl: product.primaryImage!,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => _placeholder(),
-                        errorWidget: (_, __, ___) => _placeholder(),
-                      )
-                    : _placeholder(),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          product.name,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image card
+            _sectionCard(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AspectRatio(
+                  aspectRatio: 1.0,
+                  child: Container(
+                    color: AppColors.cardBg,
+                    child: product.primaryImage != null
+                        ? CachedNetworkImage(
+                            imageUrl: product.primaryImage!,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => _placeholder(),
+                            errorWidget: (_, __, ___) => _placeholder(),
+                          )
+                        : _placeholder(),
+                  ),
+                ),
               ),
             ),
-          ),
 
-          // Product details
-          SliverToBoxAdapter(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              transform: Matrix4.translationValues(0, -20, 0),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Name + stock
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            product.name,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+            const SizedBox(height: 12),
+
+            // Name, price & stock card
+            _sectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Name + stock badge
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          product.name,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
                           ),
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: product.inStock
+                              ? AppColors.success.withValues(alpha: 0.1)
+                              : AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          product.inStock
+                              ? tr('in_stock')
+                              : tr('out_of_stock'),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: product.inStock
+                                ? AppColors.success
+                                : AppColors.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Price row
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        '\u20B9${product.sellingPrice.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      if (product.unit != null) ...[
+                        const SizedBox(width: 2),
+                        Text(
+                          '/${product.unit}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                      if (product.hasDiscount) ...[
+                        const SizedBox(width: 10),
+                        Text(
+                          '\u20B9${product.mrp.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: AppColors.textLight,
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: AppColors.textLight,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                              horizontal: 6, vertical: 3),
                           decoration: BoxDecoration(
-                            color: product.inStock
-                                ? AppColors.success.withValues(alpha: 0.1)
-                                : AppColors.error.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
+                            color: AppColors.discount,
+                            borderRadius: BorderRadius.circular(5),
                           ),
                           child: Text(
-                            product.inStock ? tr('in_stock') : tr('out_of_stock'),
-                            style: TextStyle(
+                            '${product.discountPercent.toStringAsFixed(0)}% OFF',
+                            style: const TextStyle(
+                              color: Colors.white,
                               fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: product.inStock
-                                  ? AppColors.success
-                                  : AppColors.error,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
+                    ],
+                  ),
+                ],
+              ),
+            ),
 
-                    // Price row
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          '\u20B9${product.sellingPrice.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        if (product.unit != null) ...[
-                          const SizedBox(width: 2),
+            const SizedBox(height: 12),
+
+            // Quantity / variant selector card
+            _sectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _hasVariants ? tr('select_quantity') : tr('quantity'),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (_hasVariants) ...[
+                    VariantSelector(
+                      options: product.weightPresets,
+                      selected: _selectedVariant,
+                      onSelected: (variant) {
+                        setState(() {
+                          _selectedVariant = variant;
+                          _quantity = product.presetToQuantity(variant);
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
                           Text(
-                            '/${product.unit}',
+                            '$_selectedVariant \u00D7 \u20B9${product.sellingPrice.toStringAsFixed(0)}/${product.unit}',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               color: AppColors.textSecondary,
                             ),
                           ),
-                        ],
-                        if (product.hasDiscount) ...[
-                          const SizedBox(width: 10),
-                          Text(
-                            '\u20B9${product.mrp.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: AppColors.textLight,
-                              decoration: TextDecoration.lineThrough,
-                              decorationColor: AppColors.textLight,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.discount,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Text(
-                              '${product.discountPercent.toStringAsFixed(0)}% OFF',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Attributes / Product Details
-                    if (product.attributes != null &&
-                        product.attributes!.isNotEmpty) ...[
-                      Text(
-                        tr('product_details'),
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          children: product.attributes!.entries
-                              .where((e) => e.value is! bool || e.value == true)
-                              .map((e) => Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 4),
-                                    child: Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 100,
-                                          child: Text(
-                                            _attrLabel(e.key),
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: AppColors.textSecondary,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Text(
-                                            e.value is bool
-                                                ? (e.value ? 'Yes' : 'No')
-                                                : e.value.toString(),
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.textPrimary,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ))
-                              .toList(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Weight / Size Selector
-                    if (_hasVariants) ...[
-                      Text(
-                        tr('select_quantity'),
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      VariantSelector(
-                        options: product.weightPresets,
-                        selected: _selectedVariant,
-                        onSelected: (variant) {
-                          setState(() {
-                            _selectedVariant = variant;
-                            _quantity = product.presetToQuantity(variant);
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardBg,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '$_selectedVariant \u00D7 \u20B9${product.sellingPrice.toStringAsFixed(0)}/${product.unit}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              '\u20B9${_totalPrice.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ] else ...[
-                      Text(
-                        tr('quantity'),
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          QuantityStepper(
-                            quantity: _quantity,
-                            onChanged: (q) => setState(() => _quantity = q),
-                            unit: product.unit,
-                          ),
-                          const Spacer(),
                           Text(
                             '\u20B9${_totalPrice.toStringAsFixed(0)}',
                             style: const TextStyle(
-                              fontSize: 20,
+                              fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: AppColors.primary,
                             ),
                           ),
                         ],
                       ),
-                    ],
-
-                    const SizedBox(height: 16),
-
-                    // Description
-                    if (product.description != null &&
-                        product.description!.isNotEmpty) ...[
-                      Text(
-                        tr('description'),
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        product.description!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Info chips
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
+                    ),
+                  ] else ...[
+                    Row(
                       children: [
-                        if (product.gstPercent != null)
-                          _infoChip('GST: ${product.gstPercent!.toStringAsFixed(0)}%'),
-                        _infoChip(tr('cash_on_delivery')),
-                        _infoChip(tr('same_day_delivery')),
+                        QuantityStepper(
+                          quantity: _quantity,
+                          onChanged: (q) => setState(() => _quantity = q),
+                          unit: product.unit,
+                        ),
+                        const Spacer(),
+                        Text(
+                          '\u20B9${_totalPrice.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ],
                     ),
+                  ],
+                ],
+              ),
+            ),
 
-                    const SizedBox(height: 100),
+            // Product details / attributes card
+            if (product.attributes != null &&
+                product.attributes!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _sectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr('product_details'),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ...product.attributes!.entries
+                        .where((e) => e.value is! bool || e.value == true)
+                        .map((e) => Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 110,
+                                    child: Text(
+                                      _attrLabel(e.key),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      e.value is bool
+                                          ? (e.value ? 'Yes' : 'No')
+                                          : e.value.toString(),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
                   ],
                 ),
               ),
+            ],
+
+            // Description card
+            if (product.description != null &&
+                product.description!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _sectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr('description'),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      product.description!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Info chips card
+            const SizedBox(height: 12),
+            _sectionCard(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (product.gstPercent != null)
+                    _infoChip(
+                        Icons.receipt_outlined,
+                        'GST: ${product.gstPercent!.toStringAsFixed(0)}%'),
+                  _infoChip(Icons.money_rounded, tr('cash_on_delivery')),
+                  _infoChip(
+                      Icons.local_shipping_outlined, tr('same_day_delivery')),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
 
       // Add to Cart button
@@ -415,7 +425,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Text(
                     _addedToCart
                         ? tr('added_to_cart')
-                        : 'Add to Cart  \u2022  \u20B9${_totalPrice.toStringAsFixed(0)}',
+                        : '${tr('add_to_cart')}  \u2022  \u20B9${_totalPrice.toStringAsFixed(0)}',
                     style: const TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w600),
                   ),
@@ -425,6 +435,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _sectionCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 
@@ -446,39 +475,28 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _circleButton(
-      {required IconData icon, required VoidCallback onTap}) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 18, color: AppColors.textPrimary),
-        ),
-      ),
-    );
-  }
-
-  Widget _infoChip(String label) {
+  Widget _infoChip(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.divider),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          color: AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.textSecondary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

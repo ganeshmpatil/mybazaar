@@ -15,7 +15,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   int? _selectedAddressId;
-  String _deliverySlot = 'morning';
+  String _deliverySlot = 'MORNING';
   final _notesController = TextEditingController();
   bool _isPlacing = false;
   bool _showAddressForm = false;
@@ -24,10 +24,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController();
 
   final _deliverySlots = {
-    'morning': '9 AM - 12 PM',
-    'afternoon': '12 PM - 3 PM',
-    'evening': '3 PM - 6 PM',
-    'night': '6 PM - 9 PM',
+    'MORNING': '9 AM - 12 PM',
+    'AFTERNOON': '12 PM - 3 PM',
+    'EVENING': '3 PM - 6 PM',
   };
 
   @override
@@ -248,7 +247,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     child: Column(
                       children: [
                         Text(
-                          entry.key[0].toUpperCase() + entry.key.substring(1),
+                          entry.key[0] + entry.key.substring(1).toLowerCase(),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
