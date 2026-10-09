@@ -39,9 +39,9 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image area
+            // Image area — fixed square
             AspectRatio(
-              aspectRatio: 1.1,
+              aspectRatio: 1.0,
               child: Stack(
                 children: [
                   Container(
@@ -59,7 +59,8 @@ class ProductCard extends StatelessWidget {
                             ),
                             child: CachedNetworkImage(
                               imageUrl: product.primaryImage!,
-                              fit: BoxFit.cover,
+                              fit: BoxFit.contain,
+                              alignment: Alignment.center,
                               placeholder: (_, __) => _placeholderIcon(),
                               errorWidget: (_, __, ___) => _placeholderIcon(),
                             ),
