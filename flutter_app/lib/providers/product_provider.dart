@@ -13,6 +13,7 @@ class ProductProvider extends ChangeNotifier {
   bool _hasMore = true;
   int? _selectedCategoryId;
   String _searchQuery = '';
+  String? _error;
 
   ProductProvider(this._api);
 
@@ -22,13 +23,16 @@ class ProductProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get hasMore => _hasMore;
   int? get selectedCategoryId => _selectedCategoryId;
+  String? get error => _error;
 
   Future<void> loadCategories() async {
     try {
       final data = await _api.getCategories();
       _categories = data.map((e) => Category.fromJson(e)).toList();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to load categories: $e');
+    }
   }
 
   Future<void> loadProducts({bool refresh = false}) async {
@@ -40,6 +44,7 @@ class ProductProvider extends ChangeNotifier {
     if (!_hasMore && !refresh) return;
 
     _isLoading = true;
+    _error = null;
     if (refresh) notifyListeners();
 
     try {
@@ -52,7 +57,7 @@ class ProductProvider extends ChangeNotifier {
       final items = (data['items'] as List<dynamic>)
           .map((e) => Product.fromJson(e))
           .toList();
-      _totalProducts = data['total'];
+      _totalProducts = data['total'] ?? 0;
 
       if (refresh) {
         _products = items;
@@ -63,7 +68,10 @@ class ProductProvider extends ChangeNotifier {
       final totalPages = data['total_pages'] ?? 1;
       _hasMore = _currentPage < totalPages;
       _currentPage++;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to load products: $e');
+      _error = e.toString();
+    }
 
     _isLoading = false;
     notifyListeners();
@@ -83,7 +91,8 @@ class ProductProvider extends ChangeNotifier {
     try {
       final data = await _api.getProductDetail(id);
       return Product.fromJson(data);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Failed to load product $id: $e');
       return null;
     }
   }

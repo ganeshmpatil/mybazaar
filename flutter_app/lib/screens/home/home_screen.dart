@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
@@ -16,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -32,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -90,7 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TextField(
                 controller: _searchController,
                 onChanged: (q) {
-                  context.read<ProductProvider>().search(q);
+                  _debounce?.cancel();
+                  _debounce = Timer(const Duration(milliseconds: 300), () {
+                    context.read<ProductProvider>().search(q);
+                  });
                 },
                 decoration: InputDecoration(
                   hintText: 'Search groceries, fruits, oil...',

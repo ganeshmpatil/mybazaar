@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../services/api_service.dart';
 import '../orders/order_success_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -53,17 +54,33 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _addAddress() async {
-    if (_addressController.text.trim().isEmpty) return;
+    final address = _addressController.text.trim();
+    final pincode = _pincodeController.text.trim();
+    final city = _cityController.text.trim();
+
+    if (address.isEmpty || address.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a complete address (at least 10 characters)')),
+      );
+      return;
+    }
+    if (pincode.isNotEmpty && !RegExp(r'^\d{6}$').hasMatch(pincode)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 6-digit pincode')),
+      );
+      return;
+    }
+
     final auth = context.read<AuthProvider>();
     try {
-      final address = await auth.addAddress(
-        fullAddress: _addressController.text.trim(),
+      final addr = await auth.addAddress(
+        fullAddress: address,
         label: 'Home',
-        pincode: _pincodeController.text.trim(),
-        city: _cityController.text.trim(),
+        pincode: pincode,
+        city: city,
       );
       setState(() {
-        _selectedAddressId = address.id;
+        _selectedAddressId = addr.id;
         _showAddressForm = false;
       });
       _addressController.clear();
@@ -72,7 +89,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add address: $e')),
+          const SnackBar(content: Text('Failed to add address. Please try again.')),
         );
       }
     }
@@ -103,8 +120,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
     } catch (e) {
       if (mounted) {
+        final msg = e is ApiException ? e.message : 'Failed to place order. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to place order: $e')),
+          SnackBar(content: Text(msg)),
         );
       }
     } finally {

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/order.dart';
 import '../services/api_service.dart';
@@ -8,15 +9,18 @@ class OrderProvider extends ChangeNotifier {
   List<Order> _orders = [];
   bool _isLoading = false;
   int _total = 0;
+  String? _error;
 
   OrderProvider(this._api);
 
   List<Order> get orders => _orders;
   bool get isLoading => _isLoading;
   int get total => _total;
+  String? get error => _error;
 
   Future<void> loadOrders({bool refresh = false}) async {
     _isLoading = true;
+    _error = null;
     if (refresh) notifyListeners();
 
     try {
@@ -24,8 +28,11 @@ class OrderProvider extends ChangeNotifier {
       _orders = (data['items'] as List<dynamic>)
           .map((e) => Order.fromJson(e))
           .toList();
-      _total = data['total'];
-    } catch (_) {}
+      _total = data['total'] ?? 0;
+    } catch (e) {
+      debugPrint('Failed to load orders: $e');
+      _error = e.toString();
+    }
 
     _isLoading = false;
     notifyListeners();
@@ -35,7 +42,8 @@ class OrderProvider extends ChangeNotifier {
     try {
       final data = await _api.getOrderDetail(orderId);
       return Order.fromJson(data);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Failed to load order $orderId: $e');
       return null;
     }
   }

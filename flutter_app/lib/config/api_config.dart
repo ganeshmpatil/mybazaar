@@ -1,9 +1,19 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
-  // Android emulator: 10.0.2.2 maps to host localhost
-  // iOS simulator: localhost works directly
-  // Physical device: use your machine's IP
-  // Web: use localhost directly
-  static const String baseUrl = 'http://localhost:8000';
+  static const String _devUrl = 'http://localhost:8000';
+
+  /// In release mode, use the same origin (relative URLs).
+  /// In debug mode, use localhost.
+  /// Override with --dart-define=API_BASE_URL=https://your-app.onrender.com
+  static const String _baseUrlOverride = String.fromEnvironment('API_BASE_URL');
+
+  static String get baseUrl {
+    if (_baseUrlOverride.isNotEmpty) return _baseUrlOverride;
+    if (kReleaseMode && kIsWeb) return ''; // same-origin
+    return _devUrl;
+  }
+
   static const String apiPrefix = '/api/v1';
 
   static String get authUrl => '$baseUrl$apiPrefix/auth';

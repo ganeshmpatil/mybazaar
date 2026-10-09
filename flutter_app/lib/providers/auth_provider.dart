@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
@@ -9,6 +10,7 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.initial;
   User? _user;
   List<Address> _addresses = [];
+  String? _error;
 
   AuthProvider(this._api);
 
@@ -16,6 +18,12 @@ class AuthProvider extends ChangeNotifier {
   User? get user => _user;
   List<Address> get addresses => _addresses;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+  String? get error => _error;
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
 
   Future<void> checkAuth() async {
     final token = await _api.token;
@@ -28,7 +36,8 @@ class AuthProvider extends ChangeNotifier {
       final data = await _api.getProfile();
       _user = User.fromJson(data);
       _status = AuthStatus.authenticated;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Auth check failed: $e');
       _status = AuthStatus.unauthenticated;
       await _api.clearToken();
     }
@@ -59,7 +68,11 @@ class AuthProvider extends ChangeNotifier {
       final data = await _api.getProfile();
       _user = User.fromJson(data);
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to load profile: $e');
+      _error = e.toString();
+      notifyListeners();
+    }
   }
 
   Future<void> updateProfile(String name, String? email) async {
@@ -75,7 +88,11 @@ class AuthProvider extends ChangeNotifier {
       final data = await _api.getAddresses();
       _addresses = data.map((e) => Address.fromJson(e)).toList();
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to load addresses: $e');
+      _error = e.toString();
+      notifyListeners();
+    }
   }
 
   Future<Address> addAddress({

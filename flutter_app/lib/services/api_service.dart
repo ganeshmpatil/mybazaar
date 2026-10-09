@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
@@ -14,6 +15,9 @@ class ApiException implements Exception {
 
 class ApiService {
   String? _token;
+  final http.Client _client = http.Client();
+
+  static const _timeout = Duration(seconds: 15);
 
   Future<String?> get token async {
     if (_token != null) return _token;
@@ -53,64 +57,70 @@ class ApiService {
       final body = jsonDecode(response.body);
       message = body['detail'] ?? message;
     } catch (_) {}
+
+    // Don't expose raw server errors in release mode
+    if (kReleaseMode && response.statusCode >= 500) {
+      message = 'Server error. Please try again later.';
+    }
+
     throw ApiException(response.statusCode, message);
   }
 
   // ─── Auth ────────────────────────────────────────────
 
   Future<void> sendOtp(String mobile) async {
-    final resp = await http.post(
+    final resp = await _client.post(
       Uri.parse('${ApiConfig.authUrl}/send-otp'),
       headers: _headers(),
       body: jsonEncode({'mobile': mobile}),
-    );
+    ).timeout(_timeout);
     await _handleResponse(resp);
   }
 
   Future<Map<String, dynamic>> verifyOtp(String mobile, String otp) async {
-    final resp = await http.post(
+    final resp = await _client.post(
       Uri.parse('${ApiConfig.authUrl}/verify-otp'),
       headers: _headers(),
       body: jsonEncode({'mobile': mobile, 'otp': otp}),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
   Future<Map<String, dynamic>> getProfile() async {
     final t = await token;
-    final resp = await http.get(
+    final resp = await _client.get(
       Uri.parse('${ApiConfig.authUrl}/profile'),
       headers: _headers(auth: true, authToken: t),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
     final t = await token;
-    final resp = await http.put(
+    final resp = await _client.put(
       Uri.parse('${ApiConfig.authUrl}/profile'),
       headers: _headers(auth: true, authToken: t),
       body: jsonEncode(data),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
   Future<List<dynamic>> getAddresses() async {
     final t = await token;
-    final resp = await http.get(
+    final resp = await _client.get(
       Uri.parse('${ApiConfig.authUrl}/addresses'),
       headers: _headers(auth: true, authToken: t),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
   Future<Map<String, dynamic>> addAddress(Map<String, dynamic> data) async {
     final t = await token;
-    final resp = await http.post(
+    final resp = await _client.post(
       Uri.parse('${ApiConfig.authUrl}/addresses'),
       headers: _headers(auth: true, authToken: t),
       body: jsonEncode(data),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
@@ -130,23 +140,23 @@ class ApiService {
     if (search != null && search.isNotEmpty) params['search'] = search;
 
     final uri = Uri.parse(ApiConfig.productsUrl).replace(queryParameters: params);
-    final resp = await http.get(uri, headers: _headers());
+    final resp = await _client.get(uri, headers: _headers()).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
   Future<Map<String, dynamic>> getProductDetail(int id) async {
-    final resp = await http.get(
+    final resp = await _client.get(
       Uri.parse('${ApiConfig.productsUrl}/$id'),
       headers: _headers(),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
   Future<List<dynamic>> getCategories() async {
-    final resp = await http.get(
+    final resp = await _client.get(
       Uri.parse('${ApiConfig.productsUrl}/categories'),
       headers: _headers(),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
@@ -154,39 +164,39 @@ class ApiService {
 
   Future<Map<String, dynamic>> getCart() async {
     final t = await token;
-    final resp = await http.get(
+    final resp = await _client.get(
       Uri.parse(ApiConfig.cartUrl),
       headers: _headers(auth: true, authToken: t),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
   Future<void> addToCart(int productId, double quantity) async {
     final t = await token;
-    final resp = await http.post(
+    final resp = await _client.post(
       Uri.parse(ApiConfig.cartUrl),
       headers: _headers(auth: true, authToken: t),
       body: jsonEncode({'product_id': productId, 'quantity': quantity}),
-    );
+    ).timeout(_timeout);
     await _handleResponse(resp);
   }
 
   Future<void> updateCartItem(int itemId, double quantity) async {
     final t = await token;
-    final resp = await http.put(
+    final resp = await _client.put(
       Uri.parse('${ApiConfig.cartUrl}/$itemId'),
       headers: _headers(auth: true, authToken: t),
       body: jsonEncode({'quantity': quantity}),
-    );
+    ).timeout(_timeout);
     await _handleResponse(resp);
   }
 
   Future<void> removeCartItem(int itemId) async {
     final t = await token;
-    final resp = await http.delete(
+    final resp = await _client.delete(
       Uri.parse('${ApiConfig.cartUrl}/$itemId'),
       headers: _headers(auth: true, authToken: t),
-    );
+    ).timeout(_timeout);
     await _handleResponse(resp);
   }
 
@@ -204,11 +214,11 @@ class ApiService {
     if (couponCode != null) body['coupon_code'] = couponCode;
     if (notes != null) body['notes'] = notes;
 
-    final resp = await http.post(
+    final resp = await _client.post(
       Uri.parse(ApiConfig.ordersUrl),
       headers: _headers(auth: true, authToken: t),
       body: jsonEncode(body),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
@@ -216,28 +226,28 @@ class ApiService {
     final t = await token;
     final uri = Uri.parse(ApiConfig.ordersUrl)
         .replace(queryParameters: {'page': page.toString()});
-    final resp = await http.get(
+    final resp = await _client.get(
       uri,
       headers: _headers(auth: true, authToken: t),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
   Future<Map<String, dynamic>> getOrderDetail(int orderId) async {
     final t = await token;
-    final resp = await http.get(
+    final resp = await _client.get(
       Uri.parse('${ApiConfig.ordersUrl}/$orderId'),
       headers: _headers(auth: true, authToken: t),
-    );
+    ).timeout(_timeout);
     return await _handleResponse(resp);
   }
 
   Future<void> cancelOrder(int orderId) async {
     final t = await token;
-    final resp = await http.post(
+    final resp = await _client.post(
       Uri.parse('${ApiConfig.ordersUrl}/$orderId/cancel'),
       headers: _headers(auth: true, authToken: t),
-    );
+    ).timeout(_timeout);
     await _handleResponse(resp);
   }
 }

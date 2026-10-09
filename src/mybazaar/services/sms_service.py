@@ -17,12 +17,13 @@ def send_otp_sms(mobile: str, otp: str) -> bool:
         return False
 
     try:
+        # Use "q" (quick) route — works without DLT/website verification
         response = httpx.post(
             FAST2SMS_URL,
             headers={"authorization": settings.fast2sms_api_key},
             data={
-                "route": "otp",
-                "variables_values": otp,
+                "route": "q",
+                "message": f"Your MyBazaar OTP is {otp}. Valid for 5 minutes. Do not share.",
                 "flash": "0",
                 "numbers": mobile,
             },

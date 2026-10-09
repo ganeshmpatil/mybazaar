@@ -17,8 +17,8 @@ class Category {
 
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
-      id: json['id'],
-      name: json['name'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
       parentId: json['parent_id'],
       imageUrl: json['image_url'],
       sortOrder: json['sort_order'] ?? 0,
@@ -40,8 +40,8 @@ class ProductVariant {
 
   factory ProductVariant.fromJson(Map<String, dynamic> json) {
     return ProductVariant(
-      label: json['label'],
-      price: double.parse(json['price'].toString()),
+      label: json['label'] ?? '',
+      price: double.tryParse((json['price'] ?? '0').toString()) ?? 0,
       productId: json['product_id'],
     );
   }
@@ -158,12 +158,12 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      id: json['id'],
+      id: json['id'] ?? 0,
       name: json['name'] ?? '',
       description: json['description'],
       categoryId: json['category_id'],
-      mrp: double.parse((json['mrp'] ?? '0').toString()),
-      sellingPrice: double.parse((json['selling_price'] ?? '0').toString()),
+      mrp: double.tryParse((json['mrp'] ?? '0').toString()) ?? 0,
+      sellingPrice: double.tryParse((json['selling_price'] ?? '0').toString()) ?? 0,
       unit: json['unit'],
       primaryImage: json['primary_image'],
       stockQuantity: json['stock_quantity'] != null
@@ -197,8 +197,8 @@ class ProductImage {
 
   factory ProductImage.fromJson(Map<String, dynamic> json) {
     return ProductImage(
-      id: json['id'],
-      imageUrl: json['image_url'],
+      id: json['id'] ?? 0,
+      imageUrl: json['image_url'] ?? '',
       sortOrder: json['sort_order'] ?? 0,
       isPrimary: json['is_primary'] ?? false,
     );
