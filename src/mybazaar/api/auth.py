@@ -64,6 +64,23 @@ def delete_address(address_id: int, user: User = Depends(get_current_user), db: 
     db.commit()
 
 
+@router.put("/addresses/{address_id}", response_model=AddressResponse)
+def update_address(address_id: int, data: AddressCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    address = db.query(Address).filter(Address.id == address_id, Address.user_id == user.id).first()
+    if not address:
+        raise HTTPException(status_code=404, detail="Address not found")
+    address.label = data.label
+    address.full_address = data.full_address
+    address.pincode = data.pincode
+    address.city = data.city
+    address.is_default = data.is_default
+    if data.is_default:
+        db.query(Address).filter(Address.user_id == user.id, Address.id != address_id).update({"is_default": False})
+    db.commit()
+    db.refresh(address)
+    return address
+
+
 @router.post("/addresses", response_model=AddressResponse, status_code=status.HTTP_201_CREATED)
 def add_address(data: AddressCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     address = Address(
