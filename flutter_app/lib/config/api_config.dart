@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  static const String _devUrl = 'http://localhost:8000';
+  static const String _devUrl = 'https://mybazaar-api.onrender.com';
 
   /// In release mode, use the same origin (relative URLs).
   /// In debug mode, use localhost.
