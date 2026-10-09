@@ -1,15 +1,17 @@
+import logging
+
 from ..config import settings
+from .sms_service import send_message_sms
+
+logger = logging.getLogger(__name__)
 
 
 def send_sms(mobile: str, message: str):
     if settings.app_env == "development":
-        print(f"[DEV SMS] To: {mobile} | Message: {message}")
+        logger.info("[DEV SMS] To: %s | Message: %s", mobile, message)
         return True
 
-    # TODO: integrate MSG91 or other SMS gateway
-    # import httpx
-    # response = httpx.post(...)
-    return True
+    return send_message_sms(mobile, message)
 
 
 def notify_order_placed(mobile: str, order_number: str):

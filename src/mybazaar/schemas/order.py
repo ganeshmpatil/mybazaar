@@ -1,12 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
 
 class AddressCreate(BaseModel):
     label: str | None = Field(None, max_length=50)
-    full_address: str = Field(..., min_length=5)
+    full_address: str = Field(..., min_length=5, max_length=500)
     pincode: str | None = Field(None, max_length=10)
     city: str | None = Field(None, max_length=100)
     latitude: float | None = None
@@ -66,9 +67,9 @@ class ServiceabilityResponse(BaseModel):
 
 class OrderCreate(BaseModel):
     address_id: int
-    delivery_slot: str | None = None  # MORNING, AFTERNOON, EVENING
-    coupon_code: str | None = None
-    notes: str | None = None
+    delivery_slot: Literal["MORNING", "AFTERNOON", "EVENING"] | None = None
+    coupon_code: str | None = Field(None, max_length=50)
+    notes: str | None = Field(None, max_length=500)
 
 
 class OrderItemResponse(BaseModel):
@@ -125,7 +126,7 @@ class OrderListResponse(BaseModel):
 
 
 class ReturnRequest(BaseModel):
-    reason: str = Field(..., min_length=5)
+    reason: str = Field(..., min_length=5, max_length=500)
 
 
 class StockUpdateRequest(BaseModel):

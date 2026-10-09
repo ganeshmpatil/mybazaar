@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -12,7 +14,10 @@ router = APIRouter()
 
 
 class OrderStatusUpdate(BaseModel):
-    status: str
+    status: Literal[
+        "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY",
+        "DELIVERED", "CANCELLED", "RETURNED",
+    ]
     delivery_boy_id: int | None = None
 
 

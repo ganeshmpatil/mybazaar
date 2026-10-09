@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -12,7 +14,7 @@ router = APIRouter()
 
 
 class DeliveryStatusUpdate(BaseModel):
-    status: str  # PICKED_UP, IN_TRANSIT, DELIVERED, FAILED
+    status: Literal["PICKED_UP", "IN_TRANSIT", "DELIVERED", "FAILED"]
 
 
 @router.get("/my-orders")

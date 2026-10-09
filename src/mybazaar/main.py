@@ -1,8 +1,9 @@
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -13,19 +14,44 @@ from .api.admin import orders as admin_orders
 from .api.admin import stock as admin_stock
 from .api.admin import reports as admin_reports
 
+logging.basicConfig(
+    level=logging.DEBUG if settings.app_debug else logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
     title=settings.store_name,
     description="Hyperlocal e-commerce platform for small towns",
     version="1.0.0",
+    docs_url="/docs" if settings.app_env == "development" else None,
+    redoc_url="/redoc" if settings.app_env == "development" else None,
 )
 
+# CORS — restricted in production, open in dev
+cors_origins = settings.get_cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+if cors_origins == ["*"]:
+    logger.warning("CORS: allowing all origins (dev mode). Set ALLOWED_ORIGINS in production.")
+
+
+# Global exception handler — hide internals in production
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception: %s", exc)
+    if settings.app_env == "development":
+        detail = str(exc)
+    else:
+        detail = "Internal server error"
+    return JSONResponse(status_code=500, content={"detail": detail})
+
 
 # Customer APIs
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])

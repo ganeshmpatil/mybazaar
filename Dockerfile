@@ -11,6 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN mkdir -p /app/static/products
+
 EXPOSE 8000
 
-CMD ["uvicorn", "src.mybazaar.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["sh", "-c", "python -m alembic upgrade head && uvicorn src.mybazaar.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

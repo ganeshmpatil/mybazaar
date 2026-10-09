@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: mybazaar-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          name: mybazaar-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: STORE_NAME
+        value: MyBazaar
+      - key: STORE_LAT
+        value: "21.0191"
+      - key: STORE_LNG
+        value: "75.3575"
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: FAST2SMS_API_KEY
+        sync: false
+    healthCheckPath: /health
+
+  - type: redis
+    name: mybazaar-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from decimal import Decimal
 
@@ -9,6 +10,13 @@ from ..models.order import Order, OrderItem, OrderStatusHistory, Return
 from ..models.product import Product
 from ..models.stock import Stock, StockLedger
 from ..models.user import Address
+
+logger = logging.getLogger(__name__)
+
+VALID_ORDER_STATUSES = {
+    "PLACED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY",
+    "DELIVERED", "CANCELLED", "RETURN_REQUESTED", "RETURNED",
+}
 
 
 def _generate_order_number(db: Session) -> str:
@@ -62,15 +70,26 @@ def create_order(db: Session, user_id: int, address_id: int,
     subtotal = Decimal("0")
     gst_amount = Decimal("0")
 
+    # Lock stock rows FIRST to prevent race conditions
+    stock_map = {}
+    for item in cart_items:
+        stock = (
+            db.query(Stock)
+            .filter(Stock.product_id == item.product_id)
+            .with_for_update()
+            .first()
+        )
+        stock_map[item.product_id] = stock
+
     for item in cart_items:
         product = item.product
         if not product.is_active:
             raise ValueError(f"Product '{product.name}' is no longer available")
 
-        # Check stock
-        stock = db.query(Stock).filter(Stock.product_id == product.id).first()
-        if stock and stock.quantity < item.quantity:
-            raise ValueError(f"Insufficient stock for '{product.name}' (available: {stock.quantity})")
+        stock = stock_map.get(product.id)
+        if not stock or stock.quantity < item.quantity:
+            available = stock.quantity if stock else 0
+            raise ValueError(f"Insufficient stock for '{product.name}' (available: {available})")
 
         item_total = product.selling_price * item.quantity
         item_gst = item_total * product.gst_percent / Decimal("100")
@@ -118,18 +137,17 @@ def create_order(db: Session, user_id: int, address_id: int,
     # Create COD collection entry
     db.add(CodCollection(order_id=order.id, amount=total))
 
-    # Deduct stock
+    # Deduct stock (already locked above)
     for item in cart_items:
-        stock = db.query(Stock).filter(Stock.product_id == item.product_id).with_for_update().first()
-        if stock:
-            stock.quantity -= item.quantity
-            db.add(StockLedger(
-                product_id=item.product_id,
-                change_qty=-item.quantity,
-                reason="SALE",
-                reference_id=order.id,
-                balance_after=stock.quantity,
-            ))
+        stock = stock_map[item.product_id]
+        stock.quantity -= item.quantity
+        db.add(StockLedger(
+            product_id=item.product_id,
+            change_qty=-item.quantity,
+            reason="SALE",
+            reference_id=order.id,
+            balance_after=stock.quantity,
+        ))
 
     # Clear cart
     db.query(CartItem).filter(CartItem.user_id == user_id).delete()
@@ -208,14 +226,30 @@ def request_return(db: Session, order_id: int, user_id: int, reason: str) -> Ret
     return return_req
 
 
-def update_order_status(db: Session, order_id: int, status: str,
+def update_order_status(db: Session, order_id: int, new_status: str,
                         delivery_boy_id: int | None = None, updated_by: str = "ADMIN") -> Order:
+    if new_status not in VALID_ORDER_STATUSES:
+        raise ValueError(f"Invalid status: {new_status}")
+
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         raise ValueError("Order not found")
 
-    order.status = status
-    db.add(OrderStatusHistory(order_id=order.id, status=status, created_by=updated_by))
+    # Validate status transitions
+    valid_transitions = {
+        "PLACED": {"CONFIRMED", "CANCELLED"},
+        "CONFIRMED": {"PACKED", "CANCELLED"},
+        "PACKED": {"OUT_FOR_DELIVERY", "CANCELLED"},
+        "OUT_FOR_DELIVERY": {"DELIVERED"},
+        "DELIVERED": {"RETURN_REQUESTED"},
+        "RETURN_REQUESTED": {"RETURNED"},
+    }
+    allowed = valid_transitions.get(order.status, set())
+    if new_status not in allowed:
+        raise ValueError(f"Cannot transition from {order.status} to {new_status}")
+
+    order.status = new_status
+    db.add(OrderStatusHistory(order_id=order.id, status=new_status, created_by=updated_by))
 
     db.commit()
     db.refresh(order)

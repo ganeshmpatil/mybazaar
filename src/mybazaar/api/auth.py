@@ -19,7 +19,10 @@ router = APIRouter()
 
 @router.post("/send-otp")
 def send_otp(request: SendOtpRequest):
-    auth_service.send_otp(request.mobile)
+    try:
+        auth_service.send_otp(request.mobile)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(e))
     return {"message": "OTP sent successfully"}
 
 
@@ -27,7 +30,7 @@ def send_otp(request: SendOtpRequest):
 def verify_otp(request: VerifyOtpRequest, db: Session = Depends(get_db)):
     result = auth_service.verify_and_login(db, request.mobile, request.otp)
     if result is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid OTP")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired OTP")
     return result
 
 
